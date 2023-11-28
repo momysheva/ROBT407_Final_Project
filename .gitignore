@@ -1,3 +1,7 @@
-dataset/test/
-dataset/train/
+dataset/KanndaMNIST
+dataset/DogsCats/train
+dataset/DogsCats/test
+dataset/DogsCats/val
 scratch.ipynb
+runs
+__pycache__
