@@ -9,5 +9,5 @@ PATIENCE : 3
 IMAGE_SIZE : 224
 
 MODEL: EfficientNetV2S
-PRETRAINED: True
+PRETRAINED: False
 LOSS: BCEWithLogitsLoss
