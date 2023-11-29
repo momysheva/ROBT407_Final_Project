@@ -4,6 +4,8 @@ from tqdm import tqdm
 
 from utils import save_model
 import os
+import wandb
+
 
 
 def train_step(
@@ -36,13 +38,16 @@ def train_step(
         optimizer.zero_grad()
         output = model(data)
 
-        loss = loss_fn(output, target)
+        target = target.unsqueeze(1)
+        loss = loss_fn(output,target)
         loss.backward()
         optimizer.step()
 
         train_loss += loss.item()
 
-        _, predictions = torch.max(output, 1)
+        predictions = torch.sigmoid(output)
+        predictions[predictions >= 0.5] = 1
+        predictions[predictions < 0.5] = 0
 
         correct_counts = predictions.eq(target.data.view_as(predictions))
 
@@ -83,9 +88,13 @@ def val_step(
 
             output = model(data)
 
+            target = target.unsqueeze(1)
+
             val_loss += loss_fn(output, target).item()
 
-            _, predictions = torch.max(output, 1)
+            predictions = torch.sigmoid(output)
+            predictions[predictions >= 0.5] = 1
+            predictions[predictions < 0.5] = 0
 
             correct_counts = predictions.eq(target.data.view_as(predictions))
 
@@ -106,9 +115,11 @@ def trainer(
         val_loader,
         loss_fn: torch.nn.Module,
         optimizer: torch.optim.Optimizer,
+        lr_scheduler: torch.optim.lr_scheduler,
         device: torch.device,
         epochs: int,
         save_dir: str,
+        early_stopper=None,
 ):
     """
     Train and evaluate model.
@@ -140,6 +151,8 @@ def trainer(
         train_loss, train_acc = train_step(model, train_loader, loss_fn, optimizer, device)
         print(f"Train Loss: {train_loss:.4f}, Train Acc: {train_acc:.4f}")
 
+        
+
         results["train_loss"].append(train_loss)
         results["train_acc"].append(train_acc)
 
@@ -147,14 +160,22 @@ def trainer(
         print(f"Val Loss: {val_loss:.4f}, Val Acc: {val_acc:.4f}")
         print()
 
-        
+        lr_scheduler.step()
         
         results["val_loss"].append(val_loss)
         results["val_acc"].append(val_acc)
+
+        wandb.log({"train_loss": train_loss, "val_loss": val_loss, "train_acc": train_acc, "val_acc": val_acc})
 
         if val_loss < best_val_loss:
             best_val_loss = val_loss
             torch.save(model.state_dict(), os.path.join(save_dir, "best_model.pt"))
 
+        save_model(model, save_dir + "/last_model.pth")
+
+        if early_stopper is not None:
+            if early_stopper.early_stop(val_loss):
+                print("Early stopping")
+                break
 
     return results

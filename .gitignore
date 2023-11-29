@@ -5,3 +5,6 @@ dataset/DogsCats/val
 scratch.ipynb
 runs
 __pycache__
+wandb
+.ipynb_checkpoints
+submission.csv
