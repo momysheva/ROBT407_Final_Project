@@ -170,7 +170,7 @@ class CNN_PRO(nn.Module):
     
 
 class MLP(nn.Module):
-    def __init__(self, num_classes=1, in_features=3*200*200, fc_size=[2048, 1024, 512, 256, 128], 
+    def __init__(self, num_classes=1, in_features=3*224*224, fc_size=[4096, 2048, 1024, 512, 256, 128], 
                  batch_norm=True, dropout=True) -> None:
         super().__init__()
 
