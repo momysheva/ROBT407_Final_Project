@@ -7,4 +7,3 @@ runs
 __pycache__
 wandb
 .ipynb_checkpoints
-submission.csv
